@@ -1,0 +1,9 @@
+> clangfmt --check
+
+$ copy-file changes/foo.cc src/main/native/foo.cc
+
+-> clangfmt --check
+
+> clangfmt
+
+> clangfmt --check

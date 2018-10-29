@@ -1,0 +1,9 @@
+> javafmt --check
+
+$ copy-file changes/Foo.java src/main/java/Foo.java
+
+-> javafmt --check
+
+> javafmt
+
+> javafmt --check
