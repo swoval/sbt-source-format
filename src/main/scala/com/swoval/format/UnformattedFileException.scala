@@ -6,7 +6,10 @@ import java.io.File
  * An exception thrown when a source file is not correctly formatted according to a source
  * formatter.
  */
-trait UnformattedFileException extends Exception
+trait UnformattedFileException extends Exception {
+  def file: File
+  override def getMessage: String = file.toString
+}
 
 /**
  * Provides implementations of [[UnformattedFileException]] for clang-format and javafmt.

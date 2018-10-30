@@ -30,4 +30,5 @@ private[format] object JavaFormatter extends ((File, Boolean) => Boolean) {
       original == formatted || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
     }
   }
+  override def toString = "JavaFormatter"
 }

@@ -27,4 +27,5 @@ private[format] object ClangFormatter extends ((File, Boolean) => Boolean) {
       formatted == original || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
     }
   }
+  override def toString = "ClangFormatter"
 }
