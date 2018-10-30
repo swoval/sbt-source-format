@@ -8,7 +8,7 @@ import sbt.plugins.SbtPlugin
 object Build {
   val scalaCrossVersions @ Seq(scala210, scala212) = Seq("2.10.7", "2.12.7")
 
-  def baseVersion: String = "0.1.1-SNAPSHOT"
+  def baseVersion: String = "0.1.2-SNAPSHOT"
 
   private def settings(args: Def.Setting[_]*): SettingsDefinition =
     Def.SettingsDefinition.wrapSettingsDefinition(args)
@@ -57,6 +57,8 @@ object Build {
       sbtVersion in pluginCrossBuild := {
         if ((scalaVersion in crossVersion).value == scala210) "0.13.16" else "1.0.4"
       },
+      skip in publish :=
+        !version.value.endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
       crossSbtVersions := Seq("1.1.1", "0.13.17"),
       crossScalaVersions := Seq(scala210, scala212),
       name := "sbt-source-format",
