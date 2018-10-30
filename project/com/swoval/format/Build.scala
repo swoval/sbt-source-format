@@ -1,6 +1,5 @@
 package com.swoval.format
 
-import com.typesafe.sbt.SbtGit.git
 import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.scriptedBufferLog
 import sbt._
@@ -17,12 +16,11 @@ object Build {
   private def commonSettings: SettingsDefinition =
     settings(
       scalaVersion in ThisBuild := scala212,
-      git.baseVersion := baseVersion,
       organization := "com.swoval",
-      homepage := Some(url("https://github.com/swoval/sbt-javafmt")),
+      homepage := Some(url("https://github.com/swoval/sbt-source-format")),
       scmInfo := Some(
-        ScmInfo(url("https://github.com/swoval/sbt-javafmt"),
-                "git@github.com:swoval/sbt-javafmt.git")),
+        ScmInfo(url("https://github.com/swoval/sbt-source-format"),
+                "git@github.com:swoval/sbt-source-format.git")),
       developers := List(
         Developer("username",
                   "Ethan Atkins",
@@ -39,7 +37,7 @@ object Build {
         else p
       },
       version := {
-        val v = version.value
+        val v = baseVersion
         if (sys.props.get("SonatypeSnapshot").fold(false)(_ == "true")) {
           if (v.endsWith("-SNAPSHOT")) v else s"$v-SNAPSHOT"
         } else {
