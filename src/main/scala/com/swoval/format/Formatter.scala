@@ -14,9 +14,12 @@ private[format] object Formatter {
       val sources = key.value.flatMap(SourceExtractor)
       val len = sources.length
       logger.info(s"Formatting $len source${if (len > 1) "s" else ""} using $format.")
-      sources.collect { case s if !format(s, check) =>
-        logger.error(s"$s is not correctly formatted according to $format.")
-        ex(s)
-      }.foreach(throw _)
+      sources
+        .collect {
+          case s if !format(s, check) =>
+            logger.error(s"$s is not correctly formatted according to $format.")
+            ex(s)
+        }
+        .foreach(throw _)
     }
 }
