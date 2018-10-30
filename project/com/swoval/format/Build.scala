@@ -57,6 +57,8 @@ object Build {
       sbtVersion in pluginCrossBuild := {
         if ((scalaVersion in crossVersion).value == scala210) "0.13.16" else "1.0.4"
       },
+      skip in publish :=
+        !version.value.endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
       crossSbtVersions := Seq("1.1.1", "0.13.17"),
       crossScalaVersions := Seq(scala210, scala212),
       name := "sbt-source-format",
