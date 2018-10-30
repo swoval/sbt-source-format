@@ -2,6 +2,8 @@
 
 $ copy-file changes/foo.cc src/main/native/foo.cc
 
+$ copy-file changes/foo.cc src/main/native/bar.cc
+
 -> clangfmt --check
 
 > clangfmt
