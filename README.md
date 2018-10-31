@@ -16,9 +16,9 @@ The latest version is `0.1.2`. To use the plugin, add
 ```
 addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.2")
 ```
-to your build.sbt, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
+to your `project/plugins.sbt` file, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
  `~/.sbt/0.13/plugins/global.sbt` to use it in all projects.
- 
+
 Usage
 ==
 To format java sources using
