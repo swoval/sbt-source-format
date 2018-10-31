@@ -19,6 +19,10 @@ addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.2")
 to your `project/plugins.sbt` file, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
  `~/.sbt/0.13/plugins/global.sbt` to use it in all projects.
 
+In order to use the clangfmt command, the clang-format utility must be installed. On osx, it can
+be installed using homebrew: `brew install clang-format`. On linux, it can be installed with apt:
+`apt-get install clang-format` (sudo is probably necessary on most setups).
+
 Usage
 ==
 To format java sources using
