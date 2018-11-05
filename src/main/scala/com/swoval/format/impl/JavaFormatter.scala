@@ -21,22 +21,23 @@ private[format] object JavaFormatter extends ((File, Boolean) => Boolean) {
    * @param check only verify that the file is correctly formatted when true
    * @return true if the file is correctly formatted.
    */
-  def apply(file: File, check: Boolean): Boolean = try {
-    val original = new String(Files.readAllBytes(file.toPath))
-    val formatted = formatter.formatSource(original)
-    if (check) {
-      original == formatted
-    } else {
-      original == formatted || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
+  def apply(file: File, check: Boolean): Boolean =
+    try {
+      val original = new String(Files.readAllBytes(file.toPath))
+      val formatted = formatter.formatSource(original)
+      if (check) {
+        original == formatted
+      } else {
+        original == formatted || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
+      }
+    } catch {
+      case e: NoSuchMethodError =>
+        e.printStackTrace(System.err)
+        throw e
+      case e: Exception =>
+        System.err.println(s"Couldn't format file: $file")
+        e.printStackTrace(System.err)
+        false
     }
-  } catch {
-    case e: NoSuchMethodError =>
-      e.printStackTrace(System.err)
-      throw e
-    case e: Exception =>
-      System.err.println(s"Couldn't format file: $file")
-      e.printStackTrace(System.err)
-      false
-  }
   override def toString = "JavaFormatter"
 }

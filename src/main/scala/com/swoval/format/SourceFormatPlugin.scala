@@ -1,6 +1,7 @@
 package com.swoval.format
 
 import com.swoval.format.impl.{ ClangFormatter, JavaFormatter }
+import java.net.URLClassLoader
 import sbt.Keys._
 import sbt._
 
@@ -30,11 +31,19 @@ object SourceFormatPlugin extends AutoPlugin {
     (_, ExtensionFilter(extensions: _*), true)
   private lazy val clangSources = sources("c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx")
   private lazy val javaSources = sources("java")
-
+  private val javaFormatter: (File, Boolean) => Boolean = {
+    val loader = this.getClass.getClassLoader match {
+      case l: URLClassLoader =>
+        val sorted = l.getURLs.toSeq.sortBy(u => if (u.toString.contains("guava")) -1 else 1)
+        new URLClassLoader(sorted.toArray, l.getParent)
+      case l => l
+    }
+    loader.loadClass("com.swoval.format.impl.JavaFormatter$").getDeclaredField("MODULE$").get(null)
+  }.asInstanceOf[(File, Boolean) => Boolean]
   override lazy val projectSettings: Seq[Def.Setting[_]] = super.projectSettings ++ Seq(
     clangfmtSources := (unmanagedSourceDirectories in Compile).value.map(clangSources),
     clangfmt := Formatter(clangfmtSources, ClangFormatter, UnformattedFileException.Clang).evaluated,
     javafmtSources := (unmanagedSourceDirectories in Compile).value.map(javaSources),
-    javafmt := Formatter(javafmtSources, JavaFormatter, UnformattedFileException.Java).evaluated
+    javafmt := Formatter(javafmtSources, javaFormatter, UnformattedFileException.Java).evaluated
   )
 }
