@@ -10,11 +10,11 @@ sbt-source-format
 
 A simple sbt plugin for formatting java and c family sources (c/c++/objc). The plugin is compatible
 with sbt 1.0 and sbt 0.13. Api documentation is available at
-[sbt-source-format](https://swoval.github.io/docs/sbt-source-format/0.1.3/api/com/swoval/format).
+[sbt-source-format](https://swoval.github.io/docs/sbt-source-format/0.1.4/api/com/swoval/format).
 
-The latest version is `0.1.3`. To use the plugin, add
+The latest version is `0.1.4`. To use the plugin, add
 ```
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.3")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.4")
 ```
 to your `project/plugins.sbt` file, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
  `~/.sbt/0.13/plugins/global.sbt` to use it in all projects.
@@ -56,10 +56,3 @@ source directory with
 import com.swoval.format.ExtensionFilter
 clangfmtSources += (baseDirectory.value / "src" / "main" / "native", ExtensionFilter("c", "h"), true)
 ```
-
-Troubleshooting
-==
-If the javafmt task fails and displays an error about not being able to load a class from `com.google.**`,
-then it's likely the case that a different plugin is bringing an older version of com.google.guava
-into the meta project classpath. One workaround is to ensure that the sbt-source-format plugin is
-at the head of the project/plugins.sbt file.

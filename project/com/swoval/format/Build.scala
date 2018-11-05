@@ -8,7 +8,7 @@ import sbt.plugins.SbtPlugin
 object Build {
   val scalaCrossVersions @ Seq(scala210, scala212) = Seq("2.10.7", "2.12.7")
 
-  def baseVersion: String = "0.1.3-SNAPSHOT"
+  def baseVersion: String = "0.1.4-SNAPSHOT"
 
   private def settings(args: Def.Setting[_]*): SettingsDefinition =
     Def.SettingsDefinition.wrapSettingsDefinition(args)
