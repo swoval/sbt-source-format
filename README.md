@@ -56,3 +56,10 @@ source directory with
 import com.swoval.format.ExtensionFilter
 clangfmtSources += (baseDirectory.value / "src" / "main" / "native", ExtensionFilter("c", "h"), true)
 ```
+
+Troubleshooting
+==
+If the javafmt task fails and displays an error about not being able to load a class from `com.google.**`,
+then it's likely the case that a different plugin is bringing an older version of com.google.guava
+into the meta project classpath. One workaround is to ensure that the sbt-source-format plugin is
+at the head of the project/plugins.sbt file.

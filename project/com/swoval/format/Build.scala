@@ -36,7 +36,7 @@ object Build {
           Some(Opts.resolver.sonatypeReleases): Option[Resolver]
         else p
       },
-      version := {
+      version in ThisBuild := {
         val v = baseVersion
         if (sys.props.get("SonatypeSnapshot").fold(false)(_ == "true")) {
           if (v.endsWith("-SNAPSHOT")) v else s"$v-SNAPSHOT"
