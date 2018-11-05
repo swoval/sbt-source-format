@@ -1,6 +1,6 @@
 package com.swoval.format
 
-import com.swoval.format.impl.{ ClangFormatter, JavaFormatter }
+import com.swoval.format.impl.ClangFormatter
 import java.net.URLClassLoader
 import sbt.Keys._
 import sbt._
