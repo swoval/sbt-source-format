@@ -10,11 +10,11 @@ sbt-source-format
 
 A simple sbt plugin for formatting java and c family sources (c/c++/objc). The plugin is compatible
 with sbt 1.0 and sbt 0.13. Api documentation is available at
-[sbt-source-format](https://swoval.github.io/docs/sbt-source-format/0.1.4/api/com/swoval/format).
+[sbt-source-format](https://swoval.github.io/docs/sbt-source-format/0.1.6/api/com/swoval/format).
 
-The latest version is `0.1.4`. To use the plugin, add
+The latest version is `0.1.6`. To use the plugin, add
 ```
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.4")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.6")
 ```
 to your `project/plugins.sbt` file, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
  `~/.sbt/0.13/plugins/global.sbt` to use it in all projects.
