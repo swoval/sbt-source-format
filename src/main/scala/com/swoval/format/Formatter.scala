@@ -5,7 +5,9 @@ import sbt.{ Def, File, InputTask, SettingKey }
 import sbt.Keys.streams
 
 private[format] object Formatter {
-  def apply(key: SettingKey[Seq[Source]],
+  def apply(
+    name: SettingKey[String],
+    key: SettingKey[Seq[Source]],
             format: (File, Boolean) => Boolean,
             ex: File => UnformattedFileException): Def.Initialize[InputTask[Unit]] =
     Def.inputTask {
@@ -13,7 +15,7 @@ private[format] object Formatter {
       val check = Def.spaceDelimited("<arg>").parsed.contains("--check")
       val sources = key.value.flatMap(SourceExtractor)
       val len = sources.length
-      logger.info(s"Formatting $len source${if (len > 1) "s" else ""} using $format.")
+      logger.info(s"Formatting $len source${if (len > 1) "s" else ""} in ${name.value} using $format.")
       sources
         .collect {
           case s if !format(s, check) =>
