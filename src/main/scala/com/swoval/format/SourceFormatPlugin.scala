@@ -42,8 +42,8 @@ object SourceFormatPlugin extends AutoPlugin {
   }.asInstanceOf[(File, Boolean) => Boolean]
   override lazy val projectSettings: Seq[Def.Setting[_]] = super.projectSettings ++ Seq(
     clangfmtSources := (unmanagedSourceDirectories in Compile).value.map(clangSources),
-    clangfmt := Formatter(clangfmtSources, ClangFormatter, UnformattedFileException.Clang).evaluated,
+    clangfmt := Formatter(name, clangfmtSources, ClangFormatter, UnformattedFileException.Clang).evaluated,
     javafmtSources := (unmanagedSourceDirectories in Compile).value.map(javaSources),
-    javafmt := Formatter(javafmtSources, javaFormatter, UnformattedFileException.Java).evaluated
+    javafmt := Formatter(name, javafmtSources, javaFormatter, UnformattedFileException.Java).evaluated
   )
 }
