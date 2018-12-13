@@ -19,7 +19,8 @@ private[format] object ClangFormatter extends ((File, Boolean) => Boolean) {
    * @return true if the file is correctly formatted.
    */
   def apply(file: File, check: Boolean): Boolean = {
-    val formatted = Seq("clang-format", file.toString).!!
+    val formatCmd = System.getProperty("swoval.format.cmd", "clang-format")
+    val formatted = Seq(formatCmd, file.toString).!!
     val original = new String(Files.readAllBytes(file.toPath))
     if (check) {
       formatted == original
