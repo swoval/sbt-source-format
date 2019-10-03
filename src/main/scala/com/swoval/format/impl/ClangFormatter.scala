@@ -1,32 +1,23 @@
 package com.swoval.format
 package impl
 
-import java.nio.file.Files
-import java.io.File
+import java.nio.file.Path
 
 import scala.sys.process._
-import scala.util.Try
 
 /**
- * Format a source file or verify that a file is correctly formatted using clang-format.
+ * Format a source path or verify that a path is correctly formatted using clang-format.
  */
-private[format] object ClangFormatter extends ((File, Boolean) => Boolean) {
+private[format] object ClangFormatter extends (Path => String) {
 
   /**
-   * Format the file using [[https://clang.llvm.org/docs/ClangFormat.html clang-format]].
-   * @param file the file to format
-   * @param check only verify that the file is correctly formatted when true
-   * @return true if the file is correctly formatted.
+   * Format the path using [[https://clang.llvm.org/docs/ClangFormat.html clang-format]].
+   * @param path the path to format
+   * @return true if the path is correctly formatted.
    */
-  def apply(file: File, check: Boolean): Boolean = {
+  def apply(path: Path): String = {
     val formatCmd = System.getProperty("swoval.format.cmd", "clang-format")
-    val formatted = Seq(formatCmd, file.toString).!!
-    val original = new String(Files.readAllBytes(file.toPath))
-    if (check) {
-      formatted == original
-    } else {
-      formatted == original || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
-    }
+    Seq(formatCmd, path.toString).!!
   }
   override def toString = "ClangFormatter"
 }
