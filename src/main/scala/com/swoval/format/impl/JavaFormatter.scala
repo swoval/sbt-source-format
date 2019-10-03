@@ -1,43 +1,33 @@
 package com.swoval.format
 package impl
 
-import java.nio.file.Files
+import java.nio.file.{ Files, Path }
 
 import com.google.googlejavaformat.java.Formatter
-import sbt._
-
-import scala.util.Try
 
 /**
- * Formats a source file or verifies that the file is correctly formatted using
+ * Formats a source path or verifies that the path is correctly formatted using
  * [[https://github.com/google/google-java-format google java formatter]].
  */
-private[format] object JavaFormatter extends ((File, Boolean) => Boolean) {
+private[format] object JavaFormatter extends (Path => String) {
   private val formatter = new Formatter()
 
   /**
-   * Format the file using [[https://github.com/google/google-java-format google java formatter]].
-   * @param file the file to format
-   * @param check only verify that the file is correctly formatted when true
-   * @return true if the file is correctly formatted.
+   * Format the path using [[https://github.com/google/google-java-format google java formatter]].
+   * @param path the path to format
+   * @return true if the path is correctly formatted.
    */
-  def apply(file: File, check: Boolean): Boolean =
+  def apply(path: Path): String =
     try {
-      val original = new String(Files.readAllBytes(file.toPath))
-      val formatted = formatter.formatSource(original)
-      if (check) {
-        original == formatted
-      } else {
-        original == formatted || Try(Files.write(file.toPath, formatted.getBytes)).isSuccess
-      }
+      val original = new String(Files.readAllBytes(path))
+      formatter.formatSource(original)
     } catch {
       case e: NoSuchMethodError =>
         e.printStackTrace(System.err)
         throw e
       case e: Exception =>
-        System.err.println(s"Couldn't format file: $file")
-        e.printStackTrace(System.err)
-        false
+        System.err.println(s"Couldn't format path: $path ($e)")
+        throw e
     }
   override def toString = "JavaFormatter"
 }

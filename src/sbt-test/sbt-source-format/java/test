@@ -1,9 +1,15 @@
-> javafmt --check
+> javafmtCheck
 
 $ copy-file changes/Foo.java src/main/java/Foo.java
 
--> javafmt --check
+-> javafmtCheck
 
 > javafmt
 
-> javafmt --check
+> javafmtCheck
+
+$ copy-file changes/BadFoo.java src/main/java/Foo.java
+
+-> javafmt
+
+-> javafmtCheck
