@@ -8,51 +8,64 @@ sbt-source-format
 [1]: https://travis-ci.org/swoval/sbt-source-format.svg?branch=master
 [2]: https://travis-ci.org/swoval/sbt-source-format
 
-A simple sbt plugin for formatting java and c family sources (c/c++/objc). The plugin is compatible
-with sbt 1.0 and sbt 0.13. Api documentation is available at
-[sbt-source-format](https://swoval.github.io/docs/sbt-source-format/0.1.6/api/com/swoval/format).
+A collection of sbt plugin for formatting source files. The
+current version of the plugin is compatible with sbt 1.3.0 and greater. The
+legacy version, 0.1.6 works with sbt 1.x and sbt 0.13.x.
 
-The latest version is `0.1.6`. To use the plugin, add
-```
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.6")
-```
-to your `project/plugins.sbt` file, or it add it globally to `~/.sbt/1.0/plugins/global.sbt` or
- `~/.sbt/0.13/plugins/global.sbt` to use it in all projects.
+The latest version is 0.2.0.
 
-In order to use the clangfmt command, the clang-format utility must be installed. On osx, it can
-be installed using homebrew: `brew install clang-format`. On linux, it can be installed with apt:
-`apt-get install clang-format` (sudo is probably necessary on most setups).
+There are four plugins in the family:
+
+1. `sbt-clang-format` formats c family languages (c/c++/objc) using
+clang-format.
+2. `sbt-java-format` formats java source code using [google java formater](
+    https://github.com/google/google-java-format).
+3. `sbt-scala-format` formats scala source code using [scalafmt](
+https://scalameta.org/scalafmt/).
+4. `sbt-source-format` aggregates the first three plugins.
+
+The latest version is `0.2.0`. To use the plugin, add one or more of
+```
+addSbtPlugin("com.swoval" % "sbt-clang-format" % "0.2.0")
+addSbtPlugin("com.swoval" % "sbt-java-format" % "0.2.0")
+addSbtPlugin("com.swoval" % "sbt-scala-format" % "0.2.0")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.2.0")
+```
+to your `project/plugins.sbt` file.
 
 Usage
 ==
-To format java sources using
-[google java formater](https://github.com/google/google-java-format), run
-```
-javafmt
-```
-To format native sources using [clang-format](https://clang.llvm.org/docs/ClangFormat.html), run
-```
-clangfmt
-```
-Note that both of these commands will have the side effect of overwriting each of the original files
-that are not formatted correctly with a formatted version. To verify that all sources are formatted
-correctly without actually modifying any of the original source, run the commands with the `--check`
-flag, e.g.
-```
-javafmt --check
-```
+Each format plugin provides two tasks: one for formatting a source file
+and overwriting its contents if they differ and one for checking that the
+formatting is correct without overwriting. In the case of `sbt-clang-format`,
+the format task is `clangfmt` and the check task is `clangfmtCheck`. Similarly,
+the scala and java plugins provide `scalafmt`, `scalafmtCheck`, `javafmt` and
+`javafmtCheck`.
 
 Source files
 ==
-The files to format can be configured with the `clangfmtSources` and `javafmtSources` keys. By
-default, the clangfmt sources will include all of the files in the `unmanagedSourceDirectories`
-having an extension in the set { c, cc, cpp, cxx, h, hh, hpp, hxx }. The default javafmt sources
-will be all of the files ending with `*.java` in the `unmanagedSourceDirectories`. Source
-directories may be added by specifying a `(File, FileFilter, Boolean)` where the `File` argument
-is the base source directory, the `FileFilter` controls which source files in that directory are
-accepted and the `Boolean` parameter toggles whether the directory is recursive. Add a custom
-source directory with
-```scala
-import com.swoval.format.ExtensionFilter
-clangfmtSources += (baseDirectory.value / "src" / "main" / "native", ExtensionFilter("c", "h"), true)
+By default the `javafmt` source files will be all of the files ending with
+`*.java` in the `unmanagedSourceDirectories`. The `javafmt` task is defined both
+in the `Compile` and `Test` configurations as well as in the project
+configuration.  Running `javafmt` will format all of the java source files in
+the project while running `Test / javafmt` or `Compile / javafmt` will only
+format the sources in the respective configurations.
+
+For `clangfmt` no default sources are specified. Add `*.c` sources with:
 ```
+clangfmt / fileInputs += baseDirectory.value.toGlob / "src" / ** / "*.c"
+```
+Sources can also be added to javafmt and scalafmt using `fileInputs` in
+the appropriate configs, e.g.
+```
+Compile / scalafmt / fileInputs += baseDirectory.value.toGlob / "other" / ** / "*.scala"
+```
+
+Troubleshooting
+==
+
+In order to use the clangfmt command, the clang-format utility must be
+installed. On osx, it can be installed using homebrew: `brew install
+clang-format`. On linux, it can be installed with apt: `apt-get install
+clang-format` (sudo is probably necessary on most setups).
+
