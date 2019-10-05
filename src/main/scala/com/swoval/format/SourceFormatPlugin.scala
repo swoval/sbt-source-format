@@ -1,13 +1,13 @@
 package com.swoval.format
 
 import java.net.URLClassLoader
-import java.nio.file.{ Files, Path }
+import java.nio.file.{ Files, Path, Paths }
 
-import com.swoval.format.impl.ClangFormatter
+import com.swoval.format.impl.{ ClangFormatter, ScalaFormatter }
 import sbt.Keys._
 import sbt._
-import sbt.nio.{ FileStamp, FileStamper }
 import sbt.nio.Keys.{ fileInputs, inputFileStamps, outputFileStamper, outputFileStamps }
+import sbt.nio.{ FileStamp, FileStamper }
 
 import scala.util.Try
 
@@ -23,14 +23,22 @@ object SourceFormatPlugin extends AutoPlugin {
       s"Validate that all source files are correctly formatted according to $formatter."
     val clangfmt = taskKey[Unit]("Format source files using clang format.")
     val clangfmtCheck = taskKey[Unit](checkMessage("clang-format"))
+    val clangfmtConfig = taskKey[Path]("The config file for clang-format")
     val javafmt = taskKey[Unit]("Format source files using the google java formatter")
     val javafmtCheck = taskKey[Unit](checkMessage("javafmt"))
+    val scalafmt = taskKey[Unit]("Format source files using scalafmt")
+    val scalafmtCheck = taskKey[Unit](checkMessage("scalafmt"))
+    val scalafmtConfig = taskKey[Path]("The config file for scalafmt")
+    val noFormatConfig = taskKey[Path](
+      "The config key for a format file for a formatter that doesn't use a configuration file"
+    )
   }
 
   private val clangFormatted = taskKey[Seq[Path]]("Implements formatting")
   private val javaFormatted = taskKey[Seq[Path]]("Implements formatting")
+  private val scalaFormatted = taskKey[Seq[Path]]("Implements formatting")
   import autoImport._
-  private val javaFormatter: Path => String = {
+  private val javaFormatter: (Path, Path) => String = {
     val loader = this.getClass.getClassLoader match {
       case l: URLClassLoader =>
         val sorted = l.getURLs.toSeq.sortBy(u => if (u.toString.contains("guava")) -1 else 1)
@@ -38,20 +46,23 @@ object SourceFormatPlugin extends AutoPlugin {
       case l => l
     }
     loader.loadClass("com.swoval.format.impl.JavaFormatter$").getDeclaredField("MODULE$").get(null)
-  }.asInstanceOf[Path => String]
+  }.asInstanceOf[(Path, Path) => String]
   private val SourceFormatOverwrite = AttributeKey[Boolean]("run-format")
   private def formatted(
       self: TaskKey[Seq[Path]],
       key: TaskKey[Unit],
-      formatter: Path => String,
+      configKey: TaskKey[Path],
+      formatter: (Path, Path) => String,
       formatterName: String
   ): Seq[Def.Setting[_]] =
     (self := Def
       .taskDyn[Seq[Path]] {
         val inputStamps = getInputStamps(key).value
         val prev = (key / outputFileStamps).previous.getOrElse(Nil).toMap
+        val forceReformat = configKey.outputFileChanges.hasChanges
+        val configFile = configKey.value
         val (formatted, needFormat) = inputStamps.partition {
-          case (p, s) => prev.get(p).contains(s)
+          case (p, s) => prev.get(p).contains(s) && !forceReformat
         }
         val logger = streams.value.log
         val n = name.value
@@ -67,7 +78,7 @@ object SourceFormatPlugin extends AutoPlugin {
           Def.task {
             try {
               val previous = new String(Files.readAllBytes(path))
-              val formatted = formatter(path)
+              val formatted = formatter(configFile, path)
               if (previous == formatted) Some(path)
               else if (overwrite) Try(Files.write(path, formatted.getBytes)).toOption
               else None
@@ -101,46 +112,113 @@ object SourceFormatPlugin extends AutoPlugin {
       val scoped = resolvedScoped.value.scope.project
       (key in key.scope.copy(project = scoped)) / inputFileStamps
     }
+  private val scalaError: Set[Path] => UnformattedFilesException = paths =>
+    UnformattedFilesException.Scala(paths.toSeq: _*)
   private val javaError: Set[Path] => UnformattedFilesException = paths =>
     UnformattedFilesException.Java(paths.toSeq: _*)
   private val clangError: Set[Path] => UnformattedFilesException = paths =>
     UnformattedFilesException.Clang(paths.toSeq: _*)
-  private def javaSettings(config: Configuration): Seq[Def.Setting[_]] = Def.settings(
-    config / javaFormatted / outputFileStamper := FileStamper.Hash,
-    config / javafmt / SourceFormatWrappers.unmanagedFileStampCache := SourceFormatWrappers.NoCache,
-    config / javafmt / fileInputs := {
+
+  private def javaSettings(config: Configuration): Seq[Def.Setting[_]] =
+    jvmSettings(
+      config,
+      javafmt,
+      javaFormatted,
+      javafmtCheck,
+      noFormatConfig,
+      javaFormatter,
+      "javafmt",
+      javaError,
+      "*.java"
+    )
+  private def scalaSettings(config: Configuration): Seq[Def.Setting[_]] =
+    jvmSettings(
+      config,
+      scalafmt,
+      scalaFormatted,
+      scalafmtCheck,
+      scalafmtConfig,
+      ScalaFormatter,
+      "scalafmt",
+      scalaError,
+      "*.{scala,sc}"
+    )
+  private def jvmSettings(
+      config: Configuration,
+      key: TaskKey[Unit],
+      implKey: TaskKey[Seq[Path]],
+      checkKey: TaskKey[Unit],
+      configKey: TaskKey[Path],
+      formatter: (Path, Path) => String,
+      name: String,
+      ex: Set[Path] => UnformattedFilesException,
+      filter: String
+  ): Seq[Def.Setting[_]] = Def.settings(
+    config / implKey / outputFileStamper := FileStamper.Hash,
+    config / key / SourceFormatWrappers.unmanagedFileStampCache := SourceFormatWrappers.NoCache,
+    config / key / fileInputs := {
       val allDirs = (config / unmanagedSourceDirectories).value
-      allDirs.map(_.toGlob / ** / "*.java")
+      allDirs.map(_.toGlob / ** / filter)
     },
-    formatted(config / javaFormatted, config / javafmt, javaFormatter, formatterName = "javafmt"),
-    (config / javafmt) :=
+    formatted(
+      config / implKey,
+      config / key,
+      configKey,
+      formatter,
+      formatterName = name
+    ),
+    (config / key) :=
       formatImpl(
-        config / javafmt,
-        config / javaFormatted,
+        config / key,
+        config / implKey,
         overwrite = true,
-        ex = javaError
+        ex = ex
       ).value,
-    (config / javafmtCheck) :=
+    (config / checkKey) :=
       formatImpl(
-        config / javafmt,
-        config / javaFormatted,
+        config / key,
+        config / implKey,
         overwrite = false,
-        ex = javaError
+        ex = ex
       ).value
   )
 
   override lazy val projectSettings: Seq[Def.Setting[_]] = Def.settings(
     clangfmt / SourceFormatWrappers.unmanagedFileStampCache := SourceFormatWrappers.NoCache,
     clangFormatted / outputFileStamper := FileStamper.Hash,
-    formatted(clangFormatted, clangfmt, ClangFormatter, formatterName = "clangfmt"),
+    clangfmtConfig := baseDirectory.value.toPath / ".clang-format",
+    clangfmtConfig / outputFileStamper := FileStamper.Hash,
+    formatted(clangFormatted, clangfmt, clangfmtConfig, ClangFormatter, formatterName = "clangfmt"),
     clangfmt := formatImpl(clangfmt, clangFormatted, overwrite = true, clangError).value,
     clangfmtCheck := formatImpl(clangfmt, clangFormatted, overwrite = false, clangError).value,
+    noFormatConfig := Paths.get(""),
+    scalafmtConfig := {
+      val base = baseDirectory.value.toPath / ".scalafmt.conf"
+      if (Files.exists(base)) base
+      else {
+        val root = (LocalRootProject / baseDirectory).value.toPath / ".scalafmt.conf"
+        if (Files.exists(root)) root else throw new IllegalStateException("No scalafmt.conf exists")
+      }
+    },
+    scalaSettings(Compile),
+    scalaSettings(Test),
+    scalafmt := {
+      (Compile / scalafmt).value
+      (Test / scalafmt).value
+    },
+    scalafmtCheck := {
+      (Compile / scalafmtCheck).value
+      (Test / scalafmtCheck).value
+    },
     javaSettings(Compile),
     javaSettings(Test),
     javafmt := {
       (Compile / javafmt).value
       (Test / javafmt).value
     },
-    javafmtCheck := (Test / javafmtCheck).value
+    javafmtCheck := {
+      (Compile / javafmtCheck).value
+      (Test / javafmtCheck).value
+    },
   )
 }
