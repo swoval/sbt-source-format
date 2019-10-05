@@ -9,7 +9,7 @@ import com.google.googlejavaformat.java.Formatter
  * Formats a source path or verifies that the path is correctly formatted using
  * [[https://github.com/google/google-java-format google java formatter]].
  */
-private[format] object JavaFormatter extends (Path => String) {
+private[format] object JavaFormatter extends ((Path, Path) => String) {
   private val formatter = new Formatter()
 
   /**
@@ -17,7 +17,7 @@ private[format] object JavaFormatter extends (Path => String) {
    * @param path the path to format
    * @return true if the path is correctly formatted.
    */
-  def apply(path: Path): String =
+  def apply(unused: Path, path: Path): String =
     try {
       val original = new String(Files.readAllBytes(path))
       formatter.formatSource(original)

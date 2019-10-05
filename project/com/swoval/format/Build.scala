@@ -59,6 +59,7 @@ object Build {
       commonSettings,
       scriptedBufferLog := false,
       libraryDependencies += "com.google.googlejavaformat" % "google-java-format" % "1.6",
+      libraryDependencies += "org.scalameta" %% "scalafmt-dynamic" % "2.1.0-RC2",
       dependencyOverrides := "org.scala-sbt" % "sbt" % "1.3.0" :: Nil,
       sbtVersion in pluginCrossBuild := "1.3.0",
       skip in publish :=

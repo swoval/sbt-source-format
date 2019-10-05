@@ -1,0 +1,15 @@
+> scalafmtCheck
+
+$ copy-file changes/Foo.scala src/main/scala/Foo.scala
+
+-> scalafmtCheck
+
+> scalafmt
+
+> scalafmtCheck
+
+$ copy-file changes/BadFoo.scala src/main/scala/Foo.scala
+
+-> scalafmt
+
+-> scalafmtCheck

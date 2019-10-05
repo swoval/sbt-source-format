@@ -29,4 +29,10 @@ object UnformattedFilesException {
    * @param paths the incorrectly formatted path.
    */
   final case class Java(paths: Path*) extends UnformattedFilesException
+
+  /**
+   * A path is incorrectly formatted according to scalafmt.
+   * @param paths the incorrectly formatted path.
+   */
+  final case class Scala(paths: Path*) extends UnformattedFilesException
 }
