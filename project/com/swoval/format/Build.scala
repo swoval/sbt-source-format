@@ -6,7 +6,7 @@ import sbt._
 import sbt.plugins.SbtPlugin
 
 object Build {
-  val scalaCrossVersions @ Seq(scala210, scala212) = Seq("2.10.7", "2.12.7")
+  val scala212 = "2.12.10"
 
   def baseVersion: String = "0.1.7-SNAPSHOT"
 
@@ -19,13 +19,19 @@ object Build {
       organization := "com.swoval",
       homepage := Some(url("https://github.com/swoval/sbt-source-format")),
       scmInfo := Some(
-        ScmInfo(url("https://github.com/swoval/sbt-source-format"),
-                "git@github.com:swoval/sbt-source-format.git")),
+        ScmInfo(
+          url("https://github.com/swoval/sbt-source-format"),
+          "git@github.com:swoval/sbt-source-format.git"
+        )
+      ),
       developers := List(
-        Developer("username",
-                  "Ethan Atkins",
-                  "ethan.atkins@gmail.com",
-                  url("https://github.com/eatkins"))),
+        Developer(
+          "username",
+          "Ethan Atkins",
+          "contact@ethanatkins.com",
+          url("https://github.com/eatkins")
+        )
+      ),
       licenses += ("MIT", url("https://opensource.org/licenses/MIT")),
       scalacOptions ++= Seq("-feature"),
       publishTo := {
@@ -52,15 +58,14 @@ object Build {
     .settings(
       commonSettings,
       scriptedBufferLog := false,
-      crossScalaVersions := scalaCrossVersions,
       libraryDependencies += "com.google.googlejavaformat" % "google-java-format" % "1.6",
-      sbtVersion in pluginCrossBuild := {
-        if ((scalaVersion in crossVersion).value == scala210) "0.13.16" else "1.0.4"
-      },
+      dependencyOverrides := "org.scala-sbt" % "sbt" % "1.3.0" :: Nil,
+      sbtVersion in pluginCrossBuild := "1.3.0",
       skip in publish :=
-        !version.value.endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
-      crossSbtVersions := Seq("1.1.1", "0.13.17"),
-      crossScalaVersions := Seq(scala210, scala212),
+        !version.value
+          .endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
+      crossSbtVersions := Seq("1.3.0"),
+      crossScalaVersions := Seq(scala212),
       name := "sbt-source-format",
       description := "Format source files using clang-format and the google java format library.",
     )
