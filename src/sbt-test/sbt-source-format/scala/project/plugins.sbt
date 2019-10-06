@@ -1,1 +1,1 @@
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.1.7-SNAPSHOT")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.2.1-SNAPSHOT")

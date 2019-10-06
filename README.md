@@ -42,6 +42,9 @@ the format task is `clangfmt` and the check task is `clangfmtCheck`. Similarly,
 the scala and java plugins provide `scalafmt`, `scalafmtCheck`, `javafmt` and
 `javafmtCheck`.
 
+Formatting is incremental. The plugin will only attempt to format files that
+have not been previously formatted or verified as formatted.
+
 Source files
 ==
 By default the `javafmt` source files will be all of the files ending with
