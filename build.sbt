@@ -43,21 +43,68 @@ def commonSettings: SettingsDefinition =
     },
   )
 
-val `source-format` = project
-  .in(file("."))
+val lib = project.settings(
+  commonSettings,
+  Compile / exportJars := true,
+  libraryDependencies += "org.scala-sbt" % "sbt" % "1.3.0",
+  crossScalaVersions := Seq(scala212),
+  name := "sbt-source-format-lib",
+)
+
+def pluginSettings: Seq[Def.Setting[_]] = Def.settings(
+  commonSettings,
+  Compile / exportJars := true,
+  scripted := scripted.dependsOn(lib / publishLocal).evaluated,
+  dependencyOverrides := "org.scala-sbt" % "sbt" % "1.3.0" :: Nil,
+  scriptedBufferLog := false,
+  sbtVersion in pluginCrossBuild := "1.3.0",
+  skip in publish :=
+    !version.value
+      .endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
+  crossSbtVersions := Seq("1.3.0"),
+  crossScalaVersions := Seq(scala212),
+)
+val clangformat = project
   .enablePlugins(SbtPlugin)
   .settings(
-    commonSettings,
-    scriptedBufferLog := false,
-    libraryDependencies += "com.google.googlejavaformat" % "google-java-format" % "1.6",
-    libraryDependencies += "org.scalameta" %% "scalafmt-dynamic" % "2.1.0-RC2",
-    dependencyOverrides := "org.scala-sbt" % "sbt" % "1.3.0" :: Nil,
-    sbtVersion in pluginCrossBuild := "1.3.0",
-    skip in publish :=
-      !version.value
-        .endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
-    crossSbtVersions := Seq("1.3.0"),
-    crossScalaVersions := Seq(scala212),
-    name := "sbt-source-format",
-    description := "Format source files using clang-format and the google java format library.",
+    pluginSettings,
+    name := "sbt-clang-format",
+    description := "Format source files using clang-format.",
   )
+  .dependsOn(lib % "compile->compile")
+
+val javaformat = project
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginSettings,
+    libraryDependencies += "com.google.googlejavaformat" % "google-java-format" % "1.6",
+    name := "sbt-java-format",
+    description := "Format source files using javaformat.",
+  )
+  .dependsOn(lib % "compile->compile")
+
+val scalaformat = project
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginSettings,
+    libraryDependencies += "org.scalameta" %% "scalafmt-dynamic" % "2.1.0-RC2",
+    name := "sbt-scala-format",
+    description := "Format source files using scalafmt.",
+  )
+  .dependsOn(lib % "compile->compile")
+
+// The root project aggregates the library and three plugins via depends on
+val `sbt-source-format` = (project in file("."))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginSettings,
+    name := "sbt-source-format",
+    description := "Format source files using clang-format, scalafmt and the google java format library."
+  )
+  .dependsOn(
+    lib % "compile->compile",
+    clangformat % "compile->compile",
+    javaformat % "compile->compile",
+    scalaformat % "compile->compile",
+  )
+  .aggregate(lib, clangformat, javaformat, scalaformat)
