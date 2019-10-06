@@ -23,7 +23,7 @@ def commonSettings: SettingsDefinition =
         url("https://github.com/eatkins")
       )
     ),
-    licenses += ("MIT", url("https://opensource.org/licenses/MIT")),
+    licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")),
     scalacOptions ++= Seq("-feature"),
     publishTo := {
       val p = publishTo.value
