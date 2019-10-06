@@ -2,7 +2,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val scala212 = "2.12.10"
 
-def baseVersion: String = "0.1.7-SNAPSHOT"
+ThisBuild / version := "0.1.7-SNAPSHOT"
 
 def commonSettings: SettingsDefinition =
   Def.settings(
@@ -32,20 +32,11 @@ def commonSettings: SettingsDefinition =
       else if (sys.props.get("SonatypeStaging").fold(false)(_ == "true"))
         Some(Opts.resolver.sonatypeStaging): Option[Resolver]
       else p
-    },
-    version in ThisBuild := {
-      val v = baseVersion
-      if (sys.props.get("SonatypeSnapshot").fold(false)(_ == "true")) {
-        if (v.endsWith("-SNAPSHOT")) v else s"$v-SNAPSHOT"
-      } else {
-        v
-      }
-    },
+    }
   )
 
 val lib = project.settings(
   commonSettings,
-  Compile / exportJars := true,
   libraryDependencies += "org.scala-sbt" % "sbt" % "1.3.0",
   crossScalaVersions := Seq(scala212),
   name := "sbt-source-format-lib",
@@ -53,14 +44,11 @@ val lib = project.settings(
 
 def pluginSettings: Seq[Def.Setting[_]] = Def.settings(
   commonSettings,
-  Compile / exportJars := true,
+  exportJars := true,
   scripted := scripted.dependsOn(lib / publishLocal).evaluated,
   dependencyOverrides := "org.scala-sbt" % "sbt" % "1.3.0" :: Nil,
   scriptedBufferLog := false,
   sbtVersion in pluginCrossBuild := "1.3.0",
-  skip in publish :=
-    !version.value
-      .endsWith("-SNAPSHOT") || !sys.props.get("SonatypeSnapshot").fold(true)(_ == "true"),
   crossSbtVersions := Seq("1.3.0"),
   crossScalaVersions := Seq(scala212),
 )
@@ -98,8 +86,10 @@ val `sbt-source-format` = (project in file("."))
   .enablePlugins(SbtPlugin)
   .settings(
     pluginSettings,
-    name := "sbt-source-format",
-    description := "Format source files using clang-format, scalafmt and the google java format library."
+    scripted := scripted
+      .dependsOn(clangformat / publishLocal, javaformat / publishLocal, scalaformat / publishLocal)
+      .evaluated,
+    description := "Format source files using clang-format, scalafmt and the google java format library.",
   )
   .dependsOn(
     lib % "compile->compile",
@@ -108,3 +98,23 @@ val `sbt-source-format` = (project in file("."))
     scalaformat % "compile->compile",
   )
   .aggregate(lib, clangformat, javaformat, scalaformat)
+
+def release(local: Boolean): Def.Initialize[Task[Seq[Unit]]] = Def.taskDyn {
+  val _ = (
+    (`sbt-source-format` / Compile / scalafmtCheck).value,
+    (`sbt-source-format` / Test / scalafmtCheck).value,
+  )
+  val versions =
+    Seq(lib / version, clangformat / version, javaformat / version, scalaformat / version).join
+  val publishKey = if (local) publishLocal else publish
+  Def.taskDyn {
+    val v = (ThisBuild / version).value
+    val msg = s"Version $v was ${if (local) "not" else ""} a snapshot version"
+    assert(v.endsWith("-SNAPSHOT") == local, msg)
+    assert(versions.value.forall(_ == v))
+    Seq(lib, clangformat, javaformat, scalaformat).map(_ / publishKey).join
+  }
+}
+TaskKey[Unit]("release") := release(local = false).value
+
+TaskKey[Unit]("releaseLocal") := release(local = true).value
