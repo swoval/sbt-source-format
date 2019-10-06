@@ -1,5 +1,5 @@
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.0")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.8")
 
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.0")
+addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 
-addSbtPlugin("com.geirsson" % "sbt-scalafmt" % "1.5.1")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.0.6")

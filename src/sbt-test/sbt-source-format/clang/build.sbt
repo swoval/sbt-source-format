@@ -1,5 +1,1 @@
-import com.swoval.format.ExtensionFilter
-
-val root = (project in file(".")).settings(
-  clangfmtSources += (baseDirectory.value / "src" / "main" / "native", ExtensionFilter("cc"), true)
-)
+clangfmt / fileInputs += baseDirectory.value.toGlob / "src" / "main" / "native" / ** / "*.cc"
