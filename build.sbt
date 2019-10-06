@@ -2,7 +2,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val scala212 = "2.12.10"
 
-ThisBuild / version := "0.1.7-SNAPSHOT"
+ThisBuild / version := "0.2.1-SNAPSHOT"
 
 def commonSettings: SettingsDefinition =
   Def.settings(
