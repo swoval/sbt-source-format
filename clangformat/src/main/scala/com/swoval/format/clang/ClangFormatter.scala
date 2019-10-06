@@ -1,21 +1,21 @@
-package com.swoval.format
-package impl
+package com.swoval.format.clang
 
 import java.nio.file.Path
 
+import sbt.util.Logger
 import scala.collection.JavaConverters._
 
 /**
  * Format a source path or verify that a path is correctly formatted using clang-format.
  */
-private[format] object ClangFormatter extends ((Path, Path) => String) {
+object ClangFormatter extends ((Path, Path, Logger) => String) {
 
   /**
    * Format the path using [[https://clang.llvm.org/docs/ClangFormat.html clang-format]].
    * @param path the path to format
    * @return true if the path is correctly formatted.
    */
-  def apply(config: Path, path: Path): String = {
+  def apply(config: Path, path: Path, logger: Logger): String = {
     val formatCmd = System.getProperty("swoval.format.cmd", "clang-format")
     val proc =
       new ProcessBuilder(formatCmd, path.toString).directory(config.getParent.toFile).start()
