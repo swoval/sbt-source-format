@@ -89,6 +89,9 @@ val `sbt-source-format` = (project in file("."))
     scripted := scripted
       .dependsOn(clangformat / publishLocal, javaformat / publishLocal, scalaformat / publishLocal)
       .evaluated,
+    aggregate in publishLocal := false,
+    aggregate in publish := false,
+    name := "sbt-source-format",
     description := "Format source files using clang-format, scalafmt and the google java format library.",
   )
   .dependsOn(
@@ -112,7 +115,7 @@ def release(local: Boolean): Def.Initialize[Task[Seq[Unit]]] = Def.taskDyn {
     val msg = s"Version $v was ${if (local) "not" else ""} a snapshot version"
     assert(v.endsWith("-SNAPSHOT") == local, msg)
     assert(versions.value.forall(_ == v))
-    Seq(lib, clangformat, javaformat, scalaformat).map(_ / publishKey).join
+    Seq(lib, clangformat, javaformat, scalaformat, `sbt-source-format`).map(_ / publishKey).join
   }
 }
 TaskKey[Unit]("release") := release(local = false).value
