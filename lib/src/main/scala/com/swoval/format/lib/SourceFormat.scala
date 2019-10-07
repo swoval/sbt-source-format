@@ -108,9 +108,10 @@ object SourceFormat {
       formatter: (Path, Path, Logger) => String,
       configs: (Configuration, Def.Initialize[Seq[Glob]])*
   ): Seq[Def.Setting[_]] = {
+    val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
     configs.flatMap {
       case (conf, inputs) =>
-        settings(ThisScope in (conf: ConfigKey), key, formatter, inputs, Def.setting(Paths.get("")))
+        settings(ThisScope in (conf: ConfigKey), key, formatter, inputs, config)
     }
   }
   private[format] def settings(
@@ -126,7 +127,8 @@ object SourceFormat {
       formatter: (Path, Path, Logger) => String,
       inputs: Def.Initialize[Seq[Glob]]
   ): Seq[Def.Setting[_]] = {
-    settings(ThisScope, key, formatter, inputs, Def.setting(Paths.get("")))
+    val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
+    settings(ThisScope, key, formatter, inputs, config)
   }
   private def settings(
       scope: Scope,
