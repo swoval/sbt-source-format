@@ -89,7 +89,6 @@ val `sbt-source-format` = (project in file("."))
     scripted := scripted
       .dependsOn(clangformat / publishLocal, javaformat / publishLocal, scalaformat / publishLocal)
       .evaluated,
-    aggregate in publishLocal := false,
     aggregate in publish := false,
     name := "sbt-source-format",
     description := "Format source files using clang-format, scalafmt and the google java format library.",

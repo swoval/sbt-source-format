@@ -7,15 +7,9 @@ import com.swoval.format.scala.ScalaFormatter
 import sbt.Keys.baseDirectory
 import sbt._
 
-object ScalafmtPlugin extends AutoPlugin {
+object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
   override def trigger = allRequirements
-  trait Keys {
-    val scalafmt = taskKey[Unit]("Format source files using scalafmt.")
-    val scalafmtCheck = taskKey[Unit]("Check source file formatting using scalafmt.")
-    val scalafmtConfig = taskKey[Path]("The scalafmt config file.")
-  }
-  object autoImport extends Keys
-  import autoImport._
+  object autoImport extends ScalafmtKeys
   private val checkConfig = TaskKey[Unit]("scalafmtCheckConfig", "", Int.MaxValue)
   override lazy val projectSettings: Seq[Def.Setting[_]] = Def
     .settings(
@@ -39,4 +33,10 @@ object ScalafmtPlugin extends AutoPlugin {
       (Compile / scalafmt) := (Compile / scalafmt).dependsOn(checkConfig).value,
       (Test / scalafmt) := (Test / scalafmt).dependsOn(checkConfig).value
     )
+}
+
+private[format] trait ScalafmtKeys {
+  val scalafmt = taskKey[Unit]("Format source files using scalafmt.")
+  val scalafmtCheck = taskKey[Unit]("Check source file formatting using scalafmt.")
+  val scalafmtConfig = taskKey[Path]("The scalafmt config file.")
 }

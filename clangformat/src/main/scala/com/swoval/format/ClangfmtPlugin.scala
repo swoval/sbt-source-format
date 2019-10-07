@@ -7,18 +7,18 @@ import sbt._
 
 object ClangfmtPlugin extends AutoPlugin {
   override def trigger = allRequirements
-  trait Keys {
-    val clangfmt = taskKey[Unit]("Format source files using clang format.")
-    val clangfmtCheck = taskKey[Unit]("Check source file formatting using clang format.")
-  }
-  object autoImport extends Keys
-  import autoImport._
+  object autoImport extends ClangfmtKeys
   override lazy val projectSettings: Seq[Def.Setting[_]] = Def.settings(
     SourceFormat.settings(
-      clangfmt,
+      autoImport.clangfmt,
       ClangFormatter,
       Def.setting(Nil: Seq[Glob]),
       Def.setting(baseDirectory.value.toPath / ".clang-format")
     )
   )
+}
+
+private[format] trait ClangfmtKeys {
+  val clangfmt = taskKey[Unit]("Format source files using clang format.")
+  val clangfmtCheck = taskKey[Unit]("Check source file formatting using clang format.")
 }
