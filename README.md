@@ -43,7 +43,9 @@ the scala and java plugins provide `scalafmt`, `scalafmtCheck`, `javafmt` and
 `javafmtCheck`.
 
 Formatting is incremental. The plugin will only attempt to format files that
-have not been previously formatted or verified as formatted.
+have not been previously formatted or verified as formatted. It also fully
+interoperates with the `~` command. For example, running `~javafmt`, sbt will
+watch for all of the "*.java" files and reformat whenever any are modified.
 
 Source files
 ==
