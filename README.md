@@ -66,6 +66,27 @@ the appropriate configs, e.g.
 Compile / scalafmt / fileInputs += baseDirectory.value.toGlob / "other" / ** / "*.scala"
 ```
 
+Custom formatters
+==
+The plugin also provides a library for defining custom formatter for any
+source file type. To create a custom formatter, add
+```
+libraryDependencies += "com.swoval" %% "sbt-source-format-lib" % "0.2.2"
+``` 
+to `project/plugins.sbt` (or `build.sbt` for a plugin).
+
+A no-op javascript formatter can be written like so:
+```
+import com.swoval.format.lib.SourceFormat
+import java.nio.file.Files
+val jsfmt = taskKey[Unit]("Format js files.")
+SourceFormat.settings(
+  jsfmt,
+  (path, logger) => new String(Files.readAllBytes(path)),
+  Def.setting(sourceDirectory.value.toGlob / ** / "*.js" :: Nil)
+)
+```
+
 Troubleshooting
 ==
 

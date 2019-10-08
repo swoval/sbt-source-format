@@ -8,6 +8,7 @@ import sbt.nio.Keys._
 import sbt.nio._
 
 import scala.util.Try
+import scala.language.higherKinds
 
 /**
  * An sbt plugin that provides compileSources formatting tasks. The default tasks can either format the
@@ -92,51 +93,104 @@ object SourceFormat {
       (key in key.scope.copy(project = scoped)) / inputFileStamps
     }
 
-  private[format] def settings(
+  /**
+   * Create a source formatter. The settings will define an incremental formatter and checker
+   * in the specified configurations.
+   *
+   * @param key the name of the format key, e.g. javafmt
+   * @param formatter a function that takes a config file, the source file a logger and performs
+   *                  formatting
+   * @param formatConfig the location of the formatter configuration file
+   * @param configs the configurations, e.g. `Config` and `Test`, in which the formatter is
+   *                defined along with the input globs in each configuration
+   * @return the settings that define the formatter.
+   */
+  def settings[T[_]](
       key: TaskKey[Unit],
       formatter: (Path, Path, Logger) => String,
-      config: Def.Initialize[Path],
+      formatConfig: Def.Initialize[Path],
       configs: (Configuration, Def.Initialize[Seq[Glob]])*
-  ): Seq[Def.Setting[_]] = {
+  )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     configs.flatMap {
       case (conf, inputs) =>
-        settings(ThisScope in (conf: ConfigKey), key, formatter, inputs, config)
+        settings(ThisScope in (conf: ConfigKey), key, formatter, inputs, formatConfig)
     }
   }
-  private[format] def settings(
+
+  /**
+   * Create a source formatter. The settings will define an incremental formatter and checker
+   * in the specified configurations.
+   *
+   * @param key the name of the format key, e.g. javafmt
+   * @param formatter a function that takes a source file a logger and performs
+   *                  formatting
+   * @param configs the configurations, e.g. `Config` and `Test`, in which the formatter is
+   *                defined along with the input globs in each configuration
+   * @return the settings that define the formatter.
+   */
+  def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Path, Logger) => String,
-      configs: (Configuration, Def.Initialize[Seq[Glob]])*
-  ): Seq[Def.Setting[_]] = {
+      formatter: (Path, Logger) => String,
+      configs: (Configuration, Def.Initialize[T[Glob]])*
+  )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
+    val fullFormatter: (Path, Path, Logger) => String = (_, file, logger) => formatter(file, logger)
     configs.flatMap {
       case (conf, inputs) =>
-        settings(ThisScope in (conf: ConfigKey), key, formatter, inputs, config)
+        settings(ThisScope in (conf: ConfigKey), key, fullFormatter, inputs, config)
     }
   }
-  private[format] def settings(
+
+  /**
+   * Create a source formatter. The settings will define an incremental formatter and checker
+   * in the specified configurations. The formatter and checker will be defined at the project
+   * level.
+   *
+   * @param key the name of the format key, e.g. javafmt
+   * @param formatter a function that takes a config file, the source file a logger and performs
+   *                  formatting
+   * @param inputs the input globs defining the source files to be formatted, e.g.
+   *               `sourceDirectory.value / ** / "*.java"`
+   * @param formatConfig the location of the formatter configuration file
+   * @return the settings that define the formatter.
+   */
+  def settings[T[_]](
       key: TaskKey[Unit],
       formatter: (Path, Path, Logger) => String,
-      inputs: Def.Initialize[Seq[Glob]],
-      config: Def.Initialize[Path]
-  ): Seq[Def.Setting[_]] = {
-    settings(ThisScope, key, formatter, inputs, config)
+      inputs: Def.Initialize[T[Glob]],
+      formatConfig: Def.Initialize[Path]
+  )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
+    settings(ThisScope, key, formatter, inputs, formatConfig)
   }
-  private[format] def settings(
+
+  /**
+   * Create a source formatter. The settings will define an incremental formatter and checker
+   * in the specified configurations. The formatter and checker will be defined at the project
+   * level.
+   *
+   * @param key the name of the format key, e.g. javafmt
+   * @param formatter a function that takes a config file, the source file a logger and performs
+   *                  formatting
+   * @param inputs the input globs defining the source files to be formatted, e.g.
+   *               `sourceDirectory.value / ** / "*.java"`
+   * @return the settings that define the formatter.
+   */
+  def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Path, Logger) => String,
-      inputs: Def.Initialize[Seq[Glob]]
-  ): Seq[Def.Setting[_]] = {
+      formatter: (Path, Logger) => String,
+      inputs: Def.Initialize[T[Glob]]
+  )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
-    settings(ThisScope, key, formatter, inputs, config)
+    val fullFormatter: (Path, Path, Logger) => String = (_, file, logger) => formatter(file, logger)
+    settings(ThisScope, key, fullFormatter, inputs, config)
   }
-  private def settings(
+  private def settings[T[_]](
       scope: Scope,
       key: TaskKey[Unit],
       formatter: (Path, Path, Logger) => String,
-      inputs: Def.Initialize[Seq[Glob]],
+      inputs: Def.Initialize[T[Glob]],
       config: Def.Initialize[Path]
-  ): Seq[Def.Setting[_]] = {
+  )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val name = key.key.label
     val implKey =
       TaskKey[Seq[Path]](name + "Impl", "Implement formatting", Int.MaxValue) in key.scope
@@ -147,7 +201,7 @@ object SourceFormat {
     Def.settings(
       scope / implKey / outputFileStamper := FileStamper.Hash,
       scope / key / SourceFormatWrappers.unmanagedFileStampCache := SourceFormatWrappers.NoCache,
-      scope / key / fileInputs := inputs.value,
+      scope / key / fileInputs := (inputs.value: Seq[Glob]),
       configKey := config.value,
       formatted(
         scope / implKey,
