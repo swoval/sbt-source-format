@@ -10,7 +10,7 @@ sbt-source-format
 
 A collection of sbt plugins for formatting source files. The
 current version of the plugin is compatible with sbt 1.3.0 and greater. The
-legacy version, 0.1.6 works with sbt 1.x and sbt 0.13.x.
+legacy version, 0.1.6, works with sbt 1.x and sbt 0.13.x.
 
 There are four plugins in the family:
 
