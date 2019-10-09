@@ -8,11 +8,9 @@ sbt-source-format
 [1]: https://travis-ci.org/swoval/sbt-source-format.svg?branch=master
 [2]: https://travis-ci.org/swoval/sbt-source-format
 
-A collection of sbt plugin for formatting source files. The
+A collection of sbt plugins for formatting source files. The
 current version of the plugin is compatible with sbt 1.3.0 and greater. The
 legacy version, 0.1.6 works with sbt 1.x and sbt 0.13.x.
-
-The latest version is 0.2.3.
 
 There are four plugins in the family:
 
@@ -68,17 +66,18 @@ Compile / scalafmt / fileInputs += baseDirectory.value.toGlob / "other" / ** / "
 
 Custom formatters
 ==
-The plugin also provides a library for defining custom formatter for any
+The plugin also provides a library for defining a custom formatter for any
 source file type. To create a custom formatter, add
 ```
 libraryDependencies += "com.swoval" %% "sbt-source-format-lib" % "0.2.3"
 ``` 
 to `project/plugins.sbt` (or `build.sbt` for a plugin).
 
-A no-op javascript formatter can be written like so:
-```
+A no-op javascript formatter can be added to a build.sbt file like so:
+```scala
 import com.swoval.format.lib.SourceFormat
 import java.nio.file.Files
+
 val jsfmt = taskKey[Unit]("Format js files.")
 SourceFormat.settings(
   jsfmt,
