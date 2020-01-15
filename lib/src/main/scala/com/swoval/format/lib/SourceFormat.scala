@@ -20,7 +20,7 @@ object SourceFormat {
       self: TaskKey[Seq[Path]],
       key: TaskKey[Unit],
       configKey: TaskKey[Path],
-      formatter: (Path, Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
       formatterName: String
   ): Seq[Def.Setting[_]] =
     (self := Def
@@ -50,11 +50,12 @@ object SourceFormat {
           case i           => logger.info(s"$prefix $i sources in $n using $formatterName")
         }
         val base = (LocalRootProject / baseDirectory).value.toPath
+        val format = formatter.value
         val task = (path: Path) =>
           Def.task {
             try {
               val previous = new String(Files.readAllBytes(path))
-              val formatted = formatter(configFile, path, logger)
+              val formatted = format(configFile, path, logger)
               if (previous == formatted) Some(path)
               else if (overwrite) Try(Files.write(path, formatted.getBytes)).toOption
               else None
@@ -107,7 +108,7 @@ object SourceFormat {
    */
   def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
       formatConfig: Def.Initialize[Path],
       configs: (Configuration, Def.Initialize[Seq[Glob]])*
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
@@ -130,11 +131,12 @@ object SourceFormat {
    */
   def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Logger) => String]],
       configs: (Configuration, Def.Initialize[T[Glob]])*
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
-    val fullFormatter: (Path, Path, Logger) => String = (_, file, logger) => formatter(file, logger)
+    val fullFormatter: Def.Initialize[Task[(Path, Path, Logger) => String]] =
+      formatter.map(f => (_: Path, file: Path, logger: Logger) => f(file, logger))
     configs.flatMap {
       case (conf, inputs) =>
         settings(ThisScope in (conf: ConfigKey), key, fullFormatter, inputs, config)
@@ -156,7 +158,7 @@ object SourceFormat {
    */
   def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
       inputs: Def.Initialize[T[Glob]],
       formatConfig: Def.Initialize[Path]
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
@@ -177,17 +179,18 @@ object SourceFormat {
    */
   def settings[T[_]](
       key: TaskKey[Unit],
-      formatter: (Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Logger) => String]],
       inputs: Def.Initialize[T[Glob]]
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val config = Def.setting(baseDirectory.value.toPath / ".nosbtsourceformatconfig")
-    val fullFormatter: (Path, Path, Logger) => String = (_, file, logger) => formatter(file, logger)
+    val fullFormatter: Def.Initialize[Task[(Path, Path, Logger) => String]] =
+      formatter.map(f => (_, file, logger) => f(file, logger))
     settings(ThisScope, key, fullFormatter, inputs, config)
   }
   private def settings[T[_]](
       scope: Scope,
       key: TaskKey[Unit],
-      formatter: (Path, Path, Logger) => String,
+      formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
       inputs: Def.Initialize[T[Glob]],
       config: Def.Initialize[Path]
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {

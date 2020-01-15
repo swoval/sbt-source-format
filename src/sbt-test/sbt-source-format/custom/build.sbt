@@ -1,10 +1,10 @@
 import com.swoval.format.lib.SourceFormat
-import java.nio.file.Files
+import java.nio.file.{ Files, Path }
 
 val jsfmt = taskKey[Unit]("Format js files.")
 SourceFormat.settings(
   jsfmt,
-  (path, _) => new String(Files.readAllBytes(path)) + "\n",
+  Def.task((path: Path, _: Logger) => new String(Files.readAllBytes(path)) + "\n"),
   Def.setting(sourceDirectory.value.toGlob / ** / "*.js" :: Nil)
 )
 

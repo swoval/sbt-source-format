@@ -75,7 +75,9 @@ val scalaformat = project
   .enablePlugins(SbtPlugin)
   .settings(
     pluginSettings,
-    libraryDependencies += "org.scalameta" %% "scalafmt-dynamic" % "2.1.0-RC2",
+    Compile / javacOptions += "-Xlint:deprecation",
+    libraryDependencies += "org.scalameta" % "scalafmt-interfaces" % "2.3.2",
+    libraryDependencies += "io.get-coursier" %% "coursier" % "2.0.0-RC5-6",
     name := "sbt-scala-format",
     description := "Format source files using scalafmt.",
   )

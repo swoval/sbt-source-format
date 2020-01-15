@@ -2,17 +2,22 @@ package com.swoval.format
 
 import com.swoval.format.java.JavaFormatter
 import com.swoval.format.lib.SourceFormat
+import _root_.java.nio.file.Path
 import sbt._
 
 object JavafmtPlugin extends AutoPlugin with JavafmtKeys {
   override def trigger = allRequirements
   object autoImport extends JavafmtKeys
+  private val javaFormatter = TaskKey[(Path, Logger) => String]("java-formatter", "", Int.MaxValue)
 
-  override lazy val projectSettings = SourceFormat.settings(
-    autoImport.javafmt,
-    JavaFormatter,
-    SourceFormat.compileSources(Compile, "*.java"),
-    SourceFormat.compileSources(Test, "*.java"),
+  override lazy val projectSettings = Def.settings(
+    javaFormatter := JavaFormatter,
+    SourceFormat.settings(
+      autoImport.javafmt,
+      javaFormatter,
+      SourceFormat.compileSources(Compile, "*.java"),
+      SourceFormat.compileSources(Test, "*.java"),
+    ),
   )
 }
 
