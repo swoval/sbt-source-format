@@ -9,7 +9,6 @@ import sbt.nio._
 
 import scala.language.higherKinds
 import scala.util.Try
-import ConcurrentRestriction.{ tag => Limit }
 
 /**
  * An sbt plugin that provides compileSources formatting tasks. The default tasks can either format the
@@ -30,6 +29,7 @@ object SourceFormat {
     (self := Def
       .taskDyn[Seq[Path]] {
         val inputStamps = getInputStamps(key).value
+        val limit = ConcurrentRestrictions.Tag(key.key.label)
         val prev = (key / outputFileStamps).previous.getOrElse(Nil).toMap
         val forceReformat = configKey.outputFileChanges.hasChanges
         val configFile = configKey.value
@@ -71,11 +71,11 @@ object SourceFormat {
               None
           }
         val task = (path: Path) =>
-          Def.task(formatOne(path)).tag(Limit) { t =>
+          Def.task(formatOne(path)).tag(limit) { t =>
             t.copy(info = t.info.setName(s"$formatterName:${base.relativize(path)}"))
           }
-        needFormat.map { case (p, _) => task(p).tag(Limit) }.join.flatMap { formatTasks =>
-          joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten).tag(Limit)
+        needFormat.map { case (p, _) => task(p).tag(limit) }.join.flatMap { formatTasks =>
+          joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten).tag(limit)
         }
       }
       .value) :: (self / outputFileStamper := FileStamper.Hash) ::

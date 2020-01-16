@@ -3,12 +3,12 @@ package com.swoval.format
 import _root_.java.nio.file.Path
 
 import com.swoval.format.java.JavaFormatter
-import com.swoval.format.lib.{ ConcurrentRestriction, SourceFormat }
-import sbt.Keys.unmanagedSources
+import com.swoval.format.lib.SourceFormat
+import sbt.Keys.{ concurrentRestrictions, unmanagedSources }
 import sbt._
 import sbt.nio.Keys.inputFileStamps
 
-object JavafmtPlugin extends AutoPlugin with JavafmtKeys {
+object JavafmtPlugin extends AutoPlugin with JavafmtKeys with lib.Keys {
   override def trigger = allRequirements
   object autoImport extends JavafmtKeys
   private val javaFormatter = TaskKey[(Path, Logger) => String]("java-formatter", "", Int.MaxValue)
@@ -17,7 +17,10 @@ object JavafmtPlugin extends AutoPlugin with JavafmtKeys {
     Def.taskDyn(
       if ((javafmtOnCompile in config).?.value.getOrElse(false)) javafmt in config else Def.task(())
     )
-  override lazy val globalSettings = Def.settings(ConcurrentRestriction.addLimit)
+  override lazy val globalSettings = Def.settings(
+    Global / concurrentRestrictions += Tags
+      .limit(ConcurrentRestrictions.Tag(javafmt.key.label), (javafmt / formatTaskLimit).value),
+  )
   override lazy val projectSettings = Def.settings(
     javaFormatter := JavaFormatter,
     SourceFormat.settings(
