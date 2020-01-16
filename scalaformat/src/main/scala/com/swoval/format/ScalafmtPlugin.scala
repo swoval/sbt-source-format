@@ -2,10 +2,10 @@ package com.swoval.format
 
 import java.nio.file.{ Files, Path }
 
-import com.swoval.format.lib.SourceFormat
-import sbt.Keys.{ baseDirectory, concurrentRestrictions, unmanagedSources }
-import sbt.nio.Keys.inputFileStamps
+import com.swoval.format.lib.{ ConcurrentRestriction, SourceFormat }
+import sbt.Keys.{ baseDirectory, unmanagedSources }
 import sbt._
+import sbt.nio.Keys.inputFileStamps
 
 object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
   override def trigger = allRequirements
@@ -16,12 +16,13 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
   private val scalafmtVersion = "2.3.2"
   private val Version = "version[ ]*=[ ]*(.*)".r
   private def scalafmtOnCompileImpl(config: ConfigKey): Def.Initialize[Task[Unit]] =
-    Def.taskDyn(if ((scalafmtOnCompile in config).value) scalafmt in config else Def.task(()))
-  private lazy val swovalBuild = Configuration.of("SwovalBuild", "swovalBuild")
+    Def.taskDyn(
+      if ((scalafmtOnCompile in config).?.value.getOrElse(false)) scalafmt in config
+      else Def.task(())
+    )
+  private lazy val swovalBuild = Configuration.of("ProjectSbtBuild", "projectSbtBuild")
   override lazy val globalSettings: Seq[Def.Setting[_]] = Def.settings(
-    Global / concurrentRestrictions +=
-      Tags.limit(SourceFormat.tag, java.lang.Runtime.getRuntime.availableProcessors),
-    scalafmtOnCompile := false,
+    ConcurrentRestriction.addLimit,
     scalafmtCoursierCachePath := None,
   )
   private val filter = "*.{scala,sbt,sc}"
