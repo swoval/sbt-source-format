@@ -17,12 +17,14 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
   private val Version = "version[ ]*=[ ]*(.*)".r
   private def scalafmtOnCompileImpl(config: ConfigKey): Def.Initialize[Task[Unit]] =
     Def.taskDyn(if ((scalafmtOnCompile in config).value) scalafmt in config else Def.task(()))
+  private lazy val swovalBuild = Configuration.of("SwovalBuild", "swovalBuild")
   override lazy val globalSettings: Seq[Def.Setting[_]] = Def.settings(
     Global / concurrentRestrictions +=
       Tags.limit(SourceFormat.tag, java.lang.Runtime.getRuntime.availableProcessors),
     scalafmtOnCompile := false,
     scalafmtCoursierCachePath := None,
   )
+  private val filter = "*.{scala,sbt,sc}"
   override lazy val projectSettings: Seq[Def.Setting[_]] = Def
     .settings(
       formatter := {
@@ -41,8 +43,10 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
           if (Files.exists(base)) base
           else rootDir / ".scalafmt.conf"
         },
-        SourceFormat.compileSources(Compile, "*.{scala,sbt,sc}"),
-        SourceFormat.compileSources(Test, "*.{scala,sbt,sc}"),
+        SourceFormat.compileSources(Compile, filter),
+        SourceFormat.compileSources(Test, filter),
+        swovalBuild -> baseDirectory(d => Seq(d.toGlob / filter, d.toGlob / "project" / ** / filter)
+        )
       ),
       (Compile / unmanagedSources / inputFileStamps) := (Compile / unmanagedSources / inputFileStamps)
         .dependsOn(scalafmtOnCompileImpl(Compile))
@@ -52,13 +56,23 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys {
         .value,
       configContents := new String(Files.readAllBytes(scalafmtConfig.value)),
       (Compile / scalafmt) := (Compile / scalafmt).dependsOn(configContents).value,
-      (Test / scalafmt) := (Test / scalafmt).dependsOn(configContents).value
+      (Test / scalafmt) := (Test / scalafmt).dependsOn(configContents).value,
+      (swovalBuild / scalafmt) := (swovalBuild / scalafmt).dependsOn(configContents).value,
+      scalafmtSbt := (swovalBuild / scalafmt).value,
+      scalafmtSbtCheck := (swovalBuild / scalafmtCheck).value,
+      scalafmtAll := Seq(Compile, Test, swovalBuild).map(_ / scalafmt).join.value,
+      scalafmtCheckAll := Seq(Compile, Test, swovalBuild).map(_ / scalafmtCheck).join.value
     )
 }
 
 private[format] trait ScalafmtKeys {
   val scalafmt = taskKey[Unit]("Format source files using scalafmt.")
+  val scalafmtAll =
+    taskKey[Unit]("Format all project source files, include sbt build sources, using scalafmt.")
+  val scalafmtSbt = taskKey[Unit]("Format build sources")
+  val scalafmtSbtCheck = taskKey[Unit]("Check formatting of build sources")
   val scalafmtCheck = taskKey[Unit]("Check source file formatting using scalafmt.")
+  val scalafmtCheckAll = taskKey[Unit]("Check source file formatting using scalafmt.")
   val scalafmtOnCompile =
     settingKey[Boolean]("Toggles whether to perform formatting before compilation.")
   val scalafmtConfig = taskKey[Path]("The scalafmt config file.")
