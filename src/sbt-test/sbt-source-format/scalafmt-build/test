@@ -1,0 +1,19 @@
+-> scalafmtCheckAll
+
+> scalafmtSbt
+
+> scalafmtSbtCheck
+
+$ copy-file changes/BadFoo.scala project/src/main/scala/Foo.scala
+
+-> scalafmtSbtCheck
+
+> scalafmtSbt
+
+> scalafmtSbtCheck
+
+-> scalafmtCheckAll
+
+> Compile / scalafmt
+
+> scalafmtCheckAll

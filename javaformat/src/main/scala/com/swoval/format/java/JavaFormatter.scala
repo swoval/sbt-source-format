@@ -3,7 +3,8 @@ package com.swoval.format.java
 import java.net.URLClassLoader
 import java.nio.file.{ Files, Path }
 
-import com.google.googlejavaformat.java.Formatter
+import com.google.googlejavaformat.java.{ Formatter, FormatterException }
+import com.swoval.format.lib.SourceFormat.FormatException
 import sbt.util.Logger
 
 /**
@@ -43,8 +44,6 @@ private[format] object JavaFormatterImpl extends ((Path, Logger) => String) {
       case e: NoSuchMethodError =>
         e.printStackTrace(System.err)
         throw e
-      case e: Exception =>
-        System.err.println(s"Couldn't format path: $path ($e)")
-        throw e
+      case e: FormatterException => throw new FormatException(s"$path: ${e.getMessage}")
     }
 }

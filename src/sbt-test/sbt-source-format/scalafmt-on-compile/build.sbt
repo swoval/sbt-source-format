@@ -1,0 +1,1 @@
+ThisBuild / scalafmtOnCompile := true

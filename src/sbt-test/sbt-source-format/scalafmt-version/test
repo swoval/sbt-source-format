@@ -1,0 +1,13 @@
+> scalafmtCheck
+
+> checkFile scalafmt-dynamic_2.12-2.1.0-RC1.jar
+
+$ copy-file changes/.scalafmt.conf .scalafmt.conf
+
+-> scalafmtCheck
+
+> checkFile scalafmt-dynamic_2.12-2.3.1.jar
+
+$ copy-file changes/Foo.scala src/main/scala/Foo.scala
+
+> scalafmtCheck

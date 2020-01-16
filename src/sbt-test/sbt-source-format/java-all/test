@@ -1,0 +1,11 @@
+-> javafmtCheckAll
+
+-> javafmtCheck
+
+-> Test / javafmtCheck
+
+> javafmtAll
+
+> javafmtCheck
+
+> Test/ javafmtCheck

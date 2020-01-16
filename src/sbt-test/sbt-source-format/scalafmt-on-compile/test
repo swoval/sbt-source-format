@@ -1,0 +1,5 @@
+-> scalafmtCheck
+
+> compile
+
+> scalafmtCheck
