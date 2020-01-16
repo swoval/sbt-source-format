@@ -1,0 +1,9 @@
+-> jvmfmtCheckAll
+
+> check 0
+
+> jvmfmtAll
+
+> check 5
+
+> jvmfmtCheckAll

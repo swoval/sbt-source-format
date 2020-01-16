@@ -4,6 +4,8 @@ val scala212 = "2.12.10"
 
 ThisBuild / version := "0.2.4-SNAPSHOT"
 
+val comp = "compile->compile"
+
 def commonSettings: SettingsDefinition =
   Def.settings(
     scalaVersion in ThisBuild := scala212,
@@ -59,7 +61,7 @@ val clangformat = project
     name := "sbt-clang-format",
     description := "Format source files using clang-format.",
   )
-  .dependsOn(lib % "compile->compile")
+  .dependsOn(lib % comp)
 
 val javaformat = project
   .enablePlugins(SbtPlugin)
@@ -69,7 +71,7 @@ val javaformat = project
     name := "sbt-java-format",
     description := "Format source files using javaformat.",
   )
-  .dependsOn(lib % "compile->compile")
+  .dependsOn(lib % comp)
 
 val scalaformat = project
   .enablePlugins(SbtPlugin)
@@ -81,8 +83,16 @@ val scalaformat = project
     name := "sbt-scala-format",
     description := "Format source files using scalafmt.",
   )
-  .dependsOn(lib % "compile->compile")
+  .dependsOn(lib % comp)
 
+val jvmformat = project
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginSettings,
+    name := "sbt-jvm-format",
+    description := "Format jvm source files using scalafmt and javafmt.",
+  )
+  .dependsOn(lib % comp, javaformat % comp, scalaformat % comp)
 // The root project aggregates the library and three plugins via depends on
 val `sbt-source-format` = (project in file("."))
   .enablePlugins(SbtPlugin)
@@ -95,13 +105,8 @@ val `sbt-source-format` = (project in file("."))
     name := "sbt-source-format",
     description := "Format source files using clang-format, scalafmt and the google java format library.",
   )
-  .dependsOn(
-    lib % "compile->compile",
-    clangformat % "compile->compile",
-    javaformat % "compile->compile",
-    scalaformat % "compile->compile",
-  )
-  .aggregate(lib, clangformat, javaformat, scalaformat)
+  .dependsOn(lib % comp, clangformat % comp, jvmformat % comp)
+  .aggregate(lib, clangformat, javaformat, jvmformat, scalaformat)
 
 def release(local: Boolean): Def.Initialize[Task[Seq[Unit]]] = Def.taskDyn {
   val _ = (

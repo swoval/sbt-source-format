@@ -9,6 +9,7 @@ import sbt.nio._
 
 import scala.language.higherKinds
 import scala.util.Try
+import ConcurrentRestriction.{ tag => Limit }
 
 /**
  * An sbt plugin that provides compileSources formatting tasks. The default tasks can either format the
@@ -16,7 +17,6 @@ import scala.util.Try
  */
 object SourceFormat {
   private val SourceFormatOverwrite = AttributeKey[Boolean]("source-format-overwrite")
-  val tag = ConcurrentRestrictions.Tag("source-format")
   final class FormatException(msg: String) extends RuntimeException {
     override def toString: String = msg
   }
@@ -25,7 +25,7 @@ object SourceFormat {
       key: TaskKey[Unit],
       configKey: TaskKey[Path],
       formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
-      formatterName: String
+      formatterName: String,
   ): Seq[Def.Setting[_]] =
     (self := Def
       .taskDyn[Seq[Path]] {
@@ -55,28 +55,27 @@ object SourceFormat {
         }
         val base = (LocalRootProject / baseDirectory).value.toPath
         val format = formatter.value
+        def formatOne(path: Path): Option[Path] =
+          try {
+            val previous = new String(Files.readAllBytes(path))
+            val formatted = format(configFile, path, logger)
+            if (previous == formatted) Some(path)
+            else if (overwrite) Try(Files.write(path, formatted.getBytes)).toOption
+            else None
+          } catch {
+            case e: Exception =>
+              val msg =
+                if (e.getClass.getCanonicalName.endsWith("FormatException")) e.toString
+                else s"Unable to format $path: $e"
+              logger.error(msg)
+              None
+          }
         val task = (path: Path) =>
-          Def.task {
-            try {
-              val previous = new String(Files.readAllBytes(path))
-              val formatted = format(configFile, path, logger)
-              if (previous == formatted) Some(path)
-              else if (overwrite) Try(Files.write(path, formatted.getBytes)).toOption
-              else None
-            } catch {
-              case e: Exception =>
-                val msg =
-                  if (e.getClass.getCanonicalName.endsWith("FormatException")) e.toString
-                  else s"Unable to format $path: $e"
-                logger.error(msg)
-                None
-            }
-          } { t =>
+          Def.task(formatOne(path)).tag(Limit) { t =>
             t.copy(info = t.info.setName(s"$formatterName:${base.relativize(path)}"))
           }
-        needFormat.map { case (p, _) => task(p).tag(SourceFormat.tag) }.join.flatMap {
-          formatTasks =>
-            joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten)
+        needFormat.map { case (p, _) => task(p).tag(Limit) }.join.flatMap { formatTasks =>
+          joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten).tag(Limit)
         }
       }
       .value) :: (self / outputFileStamper := FileStamper.Hash) ::
@@ -200,7 +199,7 @@ object SourceFormat {
       key: TaskKey[Unit],
       formatter: Def.Initialize[Task[(Path, Path, Logger) => String]],
       inputs: Def.Initialize[T[Glob]],
-      config: Def.Initialize[Path]
+      config: Def.Initialize[Path],
   )(implicit ev: T[Glob] <:< Seq[Glob]): Seq[Def.Setting[_]] = {
     val name = key.key.label
     val implKey =
@@ -219,7 +218,7 @@ object SourceFormat {
         scope / key,
         configKey,
         formatter,
-        formatterName = name
+        formatterName = name,
       ),
       (scope / key) :=
         formatImpl(
