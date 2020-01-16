@@ -34,13 +34,18 @@ object JavafmtPlugin extends AutoPlugin with JavafmtKeys {
     (Test / unmanagedSources / inputFileStamps) := (Test / unmanagedSources / inputFileStamps)
       .dependsOn(javafmtOnCompileImpl(Test))
       .value,
+    javafmtAll := Seq(Compile, Test).map(_ / javafmt).join.value,
+    javafmtCheckAll := Seq(Compile, Test).map(_ / javafmtCheck).join.value,
   )
 }
 
 private[format] trait JavafmtKeys {
   val javafmt = taskKey[Unit]("Format source files using the google java formatter.")
+  val javafmtAll = taskKey[Unit]("Format all project source files using the google java formatter.")
   val javafmtCheck =
     taskKey[Unit]("Check source file formatting using the google java formatter.")
+  val javafmtCheckAll =
+    taskKey[Unit]("Check all project source file formatting using the google java formatter.")
   val javafmtOnCompile =
     settingKey[Boolean]("Toggles whether to perform formatting before compilation.")
 }
