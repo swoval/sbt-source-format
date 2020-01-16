@@ -1,14 +1,14 @@
 package com.swoval.format.lib
 
-import java.nio.file.{ Files, Path, Paths }
+import java.nio.file.{ Files, Path }
 
 import sbt.Keys._
 import sbt._
 import sbt.nio.Keys._
 import sbt.nio._
 
-import scala.util.Try
 import scala.language.higherKinds
+import scala.util.Try
 
 /**
  * An sbt plugin that provides compileSources formatting tasks. The default tasks can either format the
@@ -16,6 +16,9 @@ import scala.language.higherKinds
  */
 object SourceFormat {
   private val SourceFormatOverwrite = AttributeKey[Boolean]("source-format-overwrite")
+  final class FormatException(msg: String) extends RuntimeException {
+    override def toString: String = msg
+  }
   private[format] def formatted(
       self: TaskKey[Seq[Path]],
       key: TaskKey[Unit],
@@ -61,7 +64,10 @@ object SourceFormat {
               else None
             } catch {
               case e: Exception =>
-                logger.error(e.toString);
+                val msg =
+                  if (e.getClass.getCanonicalName.endsWith("FormatException")) e.toString
+                  else s"Unable to format $path: $e"
+                logger.error(msg)
                 None
             }
           } { t =>

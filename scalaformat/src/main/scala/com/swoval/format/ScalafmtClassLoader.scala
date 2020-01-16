@@ -58,7 +58,10 @@ private[format] object ScalafmtClassLoader {
           .asInstanceOf[(Path, Path, Consumer[String]) => String]
         val res: (Path, Path, Logger) => String = (c, p, l) =>
           try formatter(c, p, s => l.info(s))
-          catch { case e: RuntimeException => throw e.getCause }
+          catch {
+            case e if e.getClass.getCanonicalName.contains("IllegalStateException") =>
+              throw new FormatException(e.getCause.getMessage)
+          }
         formatters.put(version, res)
         res
       case f => f
