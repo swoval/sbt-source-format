@@ -16,6 +16,7 @@ import scala.util.Try
  */
 object SourceFormat {
   private val SourceFormatOverwrite = AttributeKey[Boolean]("source-format-overwrite")
+  val tag = ConcurrentRestrictions.Tag("source-format")
   final class FormatException(msg: String) extends RuntimeException {
     override def toString: String = msg
   }
@@ -73,8 +74,9 @@ object SourceFormat {
           } { t =>
             t.copy(info = t.info.setName(s"$formatterName:${base.relativize(path)}"))
           }
-        needFormat.map { case (p, _) => task(p) }.join.flatMap { formatTasks =>
-          joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten)
+        needFormat.map { case (p, _) => task(p).tag(SourceFormat.tag) }.join.flatMap {
+          formatTasks =>
+            joinTasks(formatTasks).join.map(p => formatted.map(_._1) ++ p.flatten)
         }
       }
       .value) :: (self / outputFileStamper := FileStamper.Hash) ::
