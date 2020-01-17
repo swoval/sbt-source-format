@@ -132,7 +132,9 @@ def release(local: Boolean): Def.Initialize[Task[Seq[Unit]]] = Def.taskDyn {
     val msg = s"Version $v was ${if (local) "not" else ""} a snapshot version"
     assert(v.endsWith("-SNAPSHOT") == local, msg)
     assert(versions.value.forall(_ == v))
-    Seq(lib, clangformat, javaformat, scalaformat, `sbt-source-format`).map(_ / publishKey).join
+    Seq(lib, clangformat, javaformat, jvmformat, global, scalaformat, `sbt-source-format`)
+      .map(_ / publishKey)
+      .join
   }
 }
 TaskKey[Unit]("release") := release(local = false).value
