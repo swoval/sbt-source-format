@@ -21,13 +21,16 @@ clang-format.
 3. `sbt-scala-format` formats scala source code using [scalafmt](
 https://scalameta.org/scalafmt/).
 4. `sbt-source-format` aggregates the first three plugins.
+5. `sbt-jvm-format` aggregates (2) and (3) and provides keys for formatting all
+of the java and scala sources (including sbt build files).
 
-The latest version is `0.2.3`. To use the plugin, add one or more of
+The latest version is `0.3.0`. To use the plugin, add one or more of
 ```
-addSbtPlugin("com.swoval" % "sbt-clang-format" % "0.2.3")
-addSbtPlugin("com.swoval" % "sbt-java-format" % "0.2.3")
-addSbtPlugin("com.swoval" % "sbt-scala-format" % "0.2.3")
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.2.3")
+addSbtPlugin("com.swoval" % "sbt-clang-format" % "0.3.0")
+addSbtPlugin("com.swoval" % "sbt-java-format" % "0.3.0")
+addSbtPlugin("com.swoval" % "sbt-jvm-format" % "0.3.0")
+addSbtPlugin("com.swoval" % "sbt-scala-format" % "0.3.0")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.3.0")
 ```
 to your `project/plugins.sbt` file.
 
@@ -38,7 +41,11 @@ and overwriting its contents if they differ and one for checking that the
 formatting is correct without overwriting. In the case of `sbt-clang-format`,
 the format task is `clangfmt` and the check task is `clangfmtCheck`. Similarly,
 the scala and java plugins provide `scalafmt`, `scalafmtCheck`, `javafmt` and
-`javafmtCheck`.
+`javafmtCheck`. When using `sbt-jvm-format`, in addition to `javafmt`,
+`scalafmt`, etc, there is also `jvmfmt`, which formats all of the java and scala
+sources in the project for a configuration. The `jvmfmtAll` task formats all of
+the java and scala sources in the `Compile` and `Test` tasks as well as the
+scala and java sources that comprise the project sbt build.
 
 Formatting is incremental. The plugin will only attempt to format files that
 have not been previously formatted or verified as formatted. It also fully

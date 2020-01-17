@@ -2,7 +2,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val scala212 = "2.12.10"
 
-ThisBuild / version := "0.2.4-SNAPSHOT"
+ThisBuild / version := "0.3.1-SNAPSHOT"
 
 val comp = "compile->compile"
 

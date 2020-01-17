@@ -1,1 +1,1 @@
-libraryDependencies += "com.swoval" %% "sbt-source-format-lib" % "0.2.4-SNAPSHOT"
+libraryDependencies += "com.swoval" %% "sbt-source-format-lib" % "0.3.1-SNAPSHOT"
