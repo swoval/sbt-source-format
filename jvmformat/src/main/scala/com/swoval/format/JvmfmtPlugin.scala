@@ -2,7 +2,7 @@ package com.swoval.format
 
 import sbt._
 
-object JvmPlugin extends AutoPlugin with JvmfmtKeys with JavafmtKeys with ScalafmtKeys {
+object JvmfmtPlugin extends AutoPlugin with JvmfmtKeys with JavafmtKeys with ScalafmtKeys {
   override def trigger = allRequirements
   object autoImport extends JvmfmtKeys
 

@@ -16,6 +16,7 @@ import scala.util.Try
  */
 object SourceFormat {
   private val SourceFormatOverwrite = AttributeKey[Boolean]("source-format-overwrite")
+  private[format] lazy val projectSbtBuild = Configuration.of("ProjectSbtBuild", "projectSbtBuild")
   final class FormatException(msg: String) extends RuntimeException {
     override def toString: String = msg
   }

@@ -6,6 +6,7 @@ import com.swoval.format.lib.SourceFormat
 import sbt.Keys.{ baseDirectory, concurrentRestrictions, unmanagedSources }
 import sbt._
 import sbt.nio.Keys.inputFileStamps
+import SourceFormat.projectSbtBuild
 
 object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys with lib.Keys {
   override def trigger = allRequirements
@@ -20,7 +21,6 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys with lib.Keys {
       if ((scalafmtOnCompile in config).?.value.getOrElse(false)) scalafmt in config
       else Def.task(())
     )
-  private lazy val swovalBuild = Configuration.of("ProjectSbtBuild", "projectSbtBuild")
   override lazy val globalSettings: Seq[Def.Setting[_]] = Def.settings(
     Global / concurrentRestrictions += Tags
       .limit(ConcurrentRestrictions.Tag(scalafmt.key.label), (scalafmt / formatTaskLimit).value),
@@ -47,7 +47,8 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys with lib.Keys {
         },
         SourceFormat.compileSources(Compile, filter),
         SourceFormat.compileSources(Test, filter),
-        swovalBuild -> baseDirectory(d => Seq(d.toGlob / filter, d.toGlob / "project" / ** / filter)
+        projectSbtBuild -> baseDirectory(d =>
+          Seq(d.toGlob / filter, d.toGlob / "project" / ** / filter)
         )
       ),
       (Compile / unmanagedSources / inputFileStamps) := (Compile / unmanagedSources / inputFileStamps)
@@ -59,11 +60,11 @@ object ScalafmtPlugin extends AutoPlugin with ScalafmtKeys with lib.Keys {
       configContents := new String(Files.readAllBytes(scalafmtConfig.value)),
       (Compile / scalafmt) := (Compile / scalafmt).dependsOn(configContents).value,
       (Test / scalafmt) := (Test / scalafmt).dependsOn(configContents).value,
-      (swovalBuild / scalafmt) := (swovalBuild / scalafmt).dependsOn(configContents).value,
-      scalafmtSbt := (swovalBuild / scalafmt).value,
-      scalafmtSbtCheck := (swovalBuild / scalafmtCheck).value,
-      scalafmtAll := Seq(Compile, Test, swovalBuild).map(_ / scalafmt).join.value,
-      scalafmtCheckAll := Seq(Compile, Test, swovalBuild).map(_ / scalafmtCheck).join.value
+      (projectSbtBuild / scalafmt) := (projectSbtBuild / scalafmt).dependsOn(configContents).value,
+      scalafmtSbt := (projectSbtBuild / scalafmt).value,
+      scalafmtSbtCheck := (projectSbtBuild / scalafmtCheck).value,
+      scalafmtAll := Seq(Compile, Test, projectSbtBuild).map(_ / scalafmt).join.value,
+      scalafmtCheckAll := Seq(Compile, Test, projectSbtBuild).map(_ / scalafmtCheck).join.value
     )
 }
 
