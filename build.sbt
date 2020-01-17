@@ -54,6 +54,16 @@ def pluginSettings: Seq[Def.Setting[_]] = Def.settings(
   crossSbtVersions := Seq("1.3.0"),
   crossScalaVersions := Seq(scala212),
 )
+
+val global = project
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginSettings,
+    name := "sbt-source-format-global",
+    description := "Adds global keys for formatting.",
+  )
+  .dependsOn(lib % comp)
+
 val clangformat = project
   .enablePlugins(SbtPlugin)
   .settings(
@@ -61,7 +71,7 @@ val clangformat = project
     name := "sbt-clang-format",
     description := "Format source files using clang-format.",
   )
-  .dependsOn(lib % comp)
+  .dependsOn(lib % comp, global % comp)
 
 val javaformat = project
   .enablePlugins(SbtPlugin)
@@ -71,7 +81,7 @@ val javaformat = project
     name := "sbt-java-format",
     description := "Format source files using javaformat.",
   )
-  .dependsOn(lib % comp)
+  .dependsOn(lib % comp, global % comp)
 
 val scalaformat = project
   .enablePlugins(SbtPlugin)
@@ -83,7 +93,7 @@ val scalaformat = project
     name := "sbt-scala-format",
     description := "Format source files using scalafmt.",
   )
-  .dependsOn(lib % comp)
+  .dependsOn(lib % comp, global % comp)
 
 val jvmformat = project
   .enablePlugins(SbtPlugin)
@@ -92,7 +102,8 @@ val jvmformat = project
     name := "sbt-jvm-format",
     description := "Format jvm source files using scalafmt and javafmt.",
   )
-  .dependsOn(lib % comp, javaformat % comp, scalaformat % comp)
+  .dependsOn(lib % comp, javaformat % comp, scalaformat % comp, global % comp)
+
 // The root project aggregates the library and three plugins via depends on
 val `sbt-source-format` = (project in file("."))
   .enablePlugins(SbtPlugin)
@@ -105,8 +116,8 @@ val `sbt-source-format` = (project in file("."))
     name := "sbt-source-format",
     description := "Format source files using clang-format, scalafmt and the google java format library.",
   )
-  .dependsOn(lib % comp, clangformat % comp, jvmformat % comp)
-  .aggregate(lib, clangformat, javaformat, jvmformat, scalaformat)
+  .dependsOn(lib % comp, clangformat % comp, jvmformat % comp, global % comp)
+  .aggregate(lib, clangformat, javaformat, jvmformat, scalaformat, global)
 
 def release(local: Boolean): Def.Initialize[Task[Seq[Unit]]] = Def.taskDyn {
   val _ = (
