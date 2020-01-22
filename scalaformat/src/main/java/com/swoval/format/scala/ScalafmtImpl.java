@@ -30,9 +30,11 @@ public interface ScalafmtImpl {
 
   class Reporter implements ScalafmtReporter {
     private final Consumer<String> logger;
+
     Reporter(final Consumer<String> logger) {
       this.logger = logger;
-      }
+    }
+
     @Override
     public void error(final Path file, final String message) throws IllegalStateException {
       throw new IllegalStateException(file + " couldn't be formatted with scalafmt: " + message);
