@@ -24,13 +24,13 @@ https://scalameta.org/scalafmt/).
 5. `sbt-jvm-format` aggregates (2) and (3) and provides keys for formatting all
 of the java and scala sources (including sbt build files).
 
-The latest version is `0.3.0`. To use the plugin, add one or more of
+The latest version is `0.3.1`. To use the plugin, add one or more of
 ```
-addSbtPlugin("com.swoval" % "sbt-clang-format" % "0.3.0")
-addSbtPlugin("com.swoval" % "sbt-java-format" % "0.3.0")
-addSbtPlugin("com.swoval" % "sbt-jvm-format" % "0.3.0")
-addSbtPlugin("com.swoval" % "sbt-scala-format" % "0.3.0")
-addSbtPlugin("com.swoval" % "sbt-source-format" % "0.3.0")
+addSbtPlugin("com.swoval" % "sbt-clang-format" % "0.3.1")
+addSbtPlugin("com.swoval" % "sbt-java-format" % "0.3.1")
+addSbtPlugin("com.swoval" % "sbt-jvm-format" % "0.3.1")
+addSbtPlugin("com.swoval" % "sbt-scala-format" % "0.3.1")
+addSbtPlugin("com.swoval" % "sbt-source-format" % "0.3.1")
 ```
 to your `project/plugins.sbt` file.
 
