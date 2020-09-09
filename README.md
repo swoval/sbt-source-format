@@ -1,6 +1,8 @@
 sbt-source-format
 ===
 
+**It is a sad state of affairs that this feels necessary, but I ask that if you support or are planning to vote for the reelection of the 45th president of the United States of America, that you not use this plugin.**
+
 | Travis CI |
 |-----------|
 |[ ![Linux build status][1]][2] |
